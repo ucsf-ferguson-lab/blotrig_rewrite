@@ -1,11 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Papa, { type ParseResult } from "papaparse";
+
+type Tab = "csv" | "configs";
 
 export function GelCreatorPage() {
   const [csvData, setCsvData] = useState<string[][]>([]);
+  const [csvColNames, setCsvColNames] = useState<string[]>([]);
+  const [selectedCol, setSelectedCol] = useState<string>("None");
   const [lanes, setLanes] = useState<number | "">("");
   const [replications, setReplications] = useState<number | "">("");
-  const [tabIndex, setTabIndex] = useState(1); //1 = csv contents, 2 = configs
+  const [activeTab, setActiveTab] = useState<Tab>("csv");
+  const [error, setError] = useState<string | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -13,6 +18,12 @@ export function GelCreatorPage() {
       Papa.parse<string[]>(file, {
         complete: (results: ParseResult<string[]>) => {
           setCsvData(results.data);
+          if (results.data.length > 0) {
+            setCsvColNames(results.data[0]); //set as None until user selects col
+          } else {
+            setCsvColNames([]);
+            setSelectedCol("None");
+          }
         },
         skipEmptyLines: true,
       });
@@ -20,22 +31,23 @@ export function GelCreatorPage() {
   };
 
   const handleNumberChange =
-    (setter: React.Dispatch<React.SetStateAction<number | "">>) =>
+    (
+      setter: React.Dispatch<React.SetStateAction<number | "">>,
+      label: string,
+    ) =>
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const value = event.target.value;
       const numValue = value === "" ? "" : Number(value);
+
       if (numValue === "" || (Number.isInteger(numValue) && numValue >= 0)) {
+        if (numValue !== "" && numValue > 50) {
+          setter("");
+          setError(`❌ Invalid input: ${label} must be ≤ 50`);
+          return;
+        }
         setter(numValue);
       }
     };
-
-  useEffect(() => {
-    if (lanes !== "" && lanes > 0) {
-      setTabIndex(2); // show + update configs on entry
-    } else {
-      setTabIndex(1); //stay in csv viewer if configs not set
-    }
-  }, [lanes]);
 
   return (
     <div className="relative min-h-screen flex bg-gray-50">
@@ -57,6 +69,30 @@ export function GelCreatorPage() {
                          hover:file:bg-blue-100"
             />
           </li>
+
+          <li className="flex flex-col gap-2">
+            <p>Select a column name from CSV</p>
+            <select
+              value={selectedCol}
+              onChange={(e) => setSelectedCol(e.target.value)}
+              disabled={csvColNames.length === 0}
+              className={`rounded border border-gray-300 px-3 py-1 focus:ring-2 focus:ring-blue-500 outline-none ${
+                csvColNames.length === 0
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : ""
+              }`}
+            >
+              <option value="None" disabled={csvColNames.length > 0}>
+                None
+              </option>
+              {csvColNames.map((colName, i) => (
+                <option key={i} value={colName}>
+                  {colName}
+                </option>
+              ))}
+            </select>
+          </li>
+
           <li className="flex flex-col gap-2">
             <p>Enter number of lanes per gel (including ladder)</p>
             <input
@@ -65,7 +101,7 @@ export function GelCreatorPage() {
               max={50}
               step={1}
               value={lanes}
-              onChange={handleNumberChange(setLanes)}
+              onChange={handleNumberChange(setLanes, "Number of Lanes")}
               placeholder="Enter number"
               className="rounded border border-gray-300 px-3 py-1 focus:ring-2 focus:ring-blue-500 outline-none"
             />
@@ -78,12 +114,28 @@ export function GelCreatorPage() {
               max={50}
               step={1}
               value={replications}
-              onChange={handleNumberChange(setReplications)}
+              onChange={handleNumberChange(
+                setReplications,
+                "Number of Replications",
+              )}
               placeholder="Enter number"
               className="rounded border border-gray-300 px-3 py-1 focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </li>
         </ol>
+
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedCol("None");
+            setLanes("");
+            setReplications("");
+          }}
+          className="px-3 py-1 rounded border border-gray-300 bg-gray-100 text-gray-700 hover:bg-gray-200"
+          title="Clear all"
+        >
+          Clear all
+        </button>
       </div>
 
       {/* content viewer */}
@@ -92,22 +144,22 @@ export function GelCreatorPage() {
         <div className="mb-4 flex space-x-4 border-b border-gray-200">
           <button
             className={`pb-2 font-semibold ${
-              tabIndex === 1
+              activeTab === "csv"
                 ? "border-b-2 border-blue-500 text-blue-600"
                 : "text-gray-500"
             }`}
-            onClick={() => setTabIndex(1)}
+            onClick={() => setActiveTab("csv")}
             type="button"
           >
             CSV Viewer
           </button>
           <button
             className={`pb-2 font-semibold ${
-              tabIndex === 2
+              activeTab === "configs"
                 ? "border-b-2 border-blue-500 text-blue-600"
                 : "text-gray-500"
             }`}
-            onClick={() => setTabIndex(2)}
+            onClick={() => setActiveTab("configs")}
             type="button"
             disabled={lanes === "" || lanes <= 0}
             title={
@@ -118,8 +170,8 @@ export function GelCreatorPage() {
           </button>
         </div>
 
-        {/* tab contents */}
-        {tabIndex === 1 && (
+        {/* tab content */}
+        {activeTab === "csv" && (
           <div className="grow overflow-auto">
             {csvData.length > 0 ? (
               <div className="overflow-x-auto overflow-y-auto rounded-lg shadow-lg h-full border border-gray-200">
@@ -163,7 +215,7 @@ export function GelCreatorPage() {
           </div>
         )}
 
-        {tabIndex === 2 && (
+        {activeTab === "configs" && (
           <div className="grow overflow-auto">
             <h3 className="text-lg font-semibold mb-4">Gel Configurations</h3>
             <p className="text-gray-700">
@@ -171,12 +223,32 @@ export function GelCreatorPage() {
               <span className="font-mono">{lanes}</span>
             </p>
             <p className="text-gray-700">
-              Number of technical replications:{" "}
+              Replications:{" "}
               <span className="font-mono">{replications || "Not set"}</span>
+            </p>
+            <p className="text-gray-700">
+              Selected CSV column:{" "}
+              <span className="font-mono">{selectedCol}</span>
             </p>
           </div>
         )}
       </div>
+
+      {/* error popup */}
+      {error && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm text-center">
+            <h2 className="text-lg font-bold text-red-600 mb-4">Error</h2>
+            <p className="text-gray-700 mb-6">{error}</p>
+            <button
+              onClick={() => setError(null)}
+              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
