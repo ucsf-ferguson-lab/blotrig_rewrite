@@ -1,6 +1,6 @@
 import { Routes, Route, BrowserRouter } from "react-router-dom";
 
-import { GelCreatorPage } from "../../Dev/GelEntry";
+import { GelMain } from "./routes/GelMain";
 import { ErrorPage } from "./routes/ErrorPage";
 
 export function App() {
@@ -8,7 +8,7 @@ export function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/">
-          <Route index element={<GelCreatorPage />} />
+          <Route index element={<GelMain />} />
           <Route path="*" element={<ErrorPage />} />
         </Route>
       </Routes>

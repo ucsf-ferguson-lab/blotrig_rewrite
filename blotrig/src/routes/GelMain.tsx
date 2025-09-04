@@ -9,11 +9,17 @@ import { type Tab, TabNav } from "../components/TabNav";
 import { ErrorPopup } from "../components/ErrorPopup";
 
 export function GelMain() {
+  //csv hooks
   const [csvData, setCsvData] = useState<string[][]>([]);
   const [csvColNames, setCsvColNames] = useState<string[]>([]);
-  const [selectedCol, setSelectedCol] = useState<string>("None");
+
+  //config hooks
+  const [groupsCol, setGroupsCol] = useState<string>("None");
+  const [subjectsCol, setSubjectsCol] = useState<string>("None");
   const [lanes, setLanes] = useState<number | "">("");
   const [replications, setReplications] = useState<number | "">("");
+
+  //app hooks
   const [activeTab, setActiveTab] = useState<Tab>("csv");
   const [error, setError] = useState<string | null>(null);
 
@@ -28,7 +34,8 @@ export function GelMain() {
             setCsvColNames(results.data[0]);
           } else {
             setCsvColNames([]);
-            setSelectedCol("None");
+            setGroupsCol("None");
+            setSubjectsCol("None");
           }
         },
         skipEmptyLines: true,
@@ -49,7 +56,7 @@ export function GelMain() {
       if (numValue === "" || (Number.isInteger(numValue) && numValue >= 0)) {
         if (numValue !== "" && numValue > 50) {
           setter("");
-          setError(`❌ Invalid input: ${label} must be ≤ 50`);
+          setError(`Invalid input: ${label} must be ≤ 50`);
           return;
         }
         setter(numValue);
@@ -60,8 +67,10 @@ export function GelMain() {
     <div className="relative min-h-screen flex bg-gray-50">
       <GelSidebar
         csvColNames={csvColNames}
-        selectedCol={selectedCol}
-        setSelectedCol={setSelectedCol}
+        groupsCol={groupsCol}
+        setGroupsCol={setGroupsCol}
+        subjectsCol={subjectsCol}
+        setSubjectsCol={setSubjectsCol}
         lanes={lanes}
         setLanes={setLanes}
         replications={replications}
@@ -83,7 +92,8 @@ export function GelMain() {
           <ConfigsView
             lanes={lanes}
             replications={replications}
-            selectedCol={selectedCol}
+            groupsCol={groupsCol}
+            subjectsCol={subjectsCol}
           />
         )}
       </div>

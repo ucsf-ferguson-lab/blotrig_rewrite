@@ -4,8 +4,10 @@ import { ColSelector } from "./ColSelector";
 
 interface GelSidebarProps {
   csvColNames: string[];
-  selectedCol: string;
-  setSelectedCol: React.Dispatch<React.SetStateAction<string>>;
+  groupsCol: string;
+  setGroupsCol: React.Dispatch<React.SetStateAction<string>>;
+  subjectsCol: string;
+  setSubjectsCol: React.Dispatch<React.SetStateAction<string>>;
   lanes: number | "";
   setLanes: React.Dispatch<React.SetStateAction<number | "">>;
   replications: number | "";
@@ -19,8 +21,10 @@ interface GelSidebarProps {
 
 export function GelSidebar({
   csvColNames,
-  selectedCol,
-  setSelectedCol,
+  groupsCol,
+  setGroupsCol,
+  subjectsCol,
+  setSubjectsCol,
   lanes,
   setLanes,
   replications,
@@ -33,7 +37,8 @@ export function GelSidebar({
       <h2 className="text-lg font-semibold mb-5">Setup:</h2>
       <ol className="list-decimal list-inside space-y-6 text-sm">
         <li>
-          <p>Upload your samples as a tidy CSV file</p>
+          Upload your samples as a tidy CSV file
+          <br />
           <input
             type="file"
             accept=".csv"
@@ -43,16 +48,28 @@ export function GelSidebar({
         </li>
 
         <li>
-          <p>Select a column name from CSV</p>
+          Select group column
+          <br />
           <ColSelector
             csvColNames={csvColNames}
-            selectedCol={selectedCol}
-            setSelectedCol={setSelectedCol}
+            selectedCol={groupsCol}
+            setSelectedCol={setGroupsCol}
           />
         </li>
 
         <li>
-          <p>Enter number of lanes per gel (including ladder)</p>
+          Select subjects column
+          <br />
+          <ColSelector
+            csvColNames={csvColNames}
+            selectedCol={subjectsCol}
+            setSelectedCol={setSubjectsCol}
+          />
+        </li>
+
+        <li>
+          Enter number of lanes per gel (including ladder)
+          <br />
           <NumberInput
             value={lanes}
             setter={setLanes}
@@ -62,7 +79,8 @@ export function GelSidebar({
         </li>
 
         <li>
-          <p>Enter number of technical replications</p>
+          Enter number of technical replications
+          <br />
           <NumberInput
             value={replications}
             setter={setReplications}
@@ -71,10 +89,12 @@ export function GelSidebar({
           />
         </li>
       </ol>
+
       <button
         type="button"
         onClick={() => {
-          setSelectedCol("None");
+          setGroupsCol("None");
+          setSubjectsCol("None");
           setLanes("");
           setReplications("");
         }}
