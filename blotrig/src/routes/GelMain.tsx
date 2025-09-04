@@ -23,6 +23,7 @@ export function GelMain() {
 
   // subjects table
   const [subjectsTable, setSubjectsTable] = useState<SubjectsTable>({});
+  const canDownloadSubjects = Object.keys(subjectsTable).length > 0;
 
   // csv handler
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,7 +71,39 @@ export function GelMain() {
     }
   };
 
-  // disable create subjects table button if values not entered
+  // download subjects table as csv handler
+  const handleDownloadSubjects = () => {
+    if (!subjectsTable || Object.keys(subjectsTable).length === 0) {
+      setError("No subjects table to download.");
+      return;
+    }
+
+    const columns = Object.keys(subjectsTable);
+    const colArrays = Object.values(subjectsTable);
+    const maxLen = Math.max(...colArrays.map((arr) => arr.length));
+
+    const rows = [];
+    for (let i = 0; i < maxLen; i++) {
+      const row: Record<string, string> = {};
+      columns.forEach((col) => {
+        row[col] = subjectsTable[col][i] ?? "";
+      });
+      rows.push(row);
+    }
+
+    const csvString = Papa.unparse(rows);
+    const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "subjects_table.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // disable create subjects button if values missing
   const isCreateSubjectsDisabled =
     csvData.length === 0 || groupsCol === "None" || subjectsCol === "None";
 
@@ -85,6 +118,8 @@ export function GelMain() {
         onFileChange={handleFileChange}
         onCreateSubjects={handleCreateSubjects}
         createSubjectsDisabled={isCreateSubjectsDisabled}
+        onDownloadSubjects={handleDownloadSubjects}
+        canDownloadSubjects={canDownloadSubjects}
       />
 
       {/* content area */}

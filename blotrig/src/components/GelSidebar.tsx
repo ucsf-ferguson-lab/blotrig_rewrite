@@ -10,6 +10,8 @@ interface GelSidebarProps {
   onFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onCreateSubjects: () => void;
   createSubjectsDisabled: boolean;
+  onDownloadSubjects: () => void;
+  canDownloadSubjects: boolean;
 }
 
 export function GelSidebar({
@@ -21,6 +23,8 @@ export function GelSidebar({
   onFileChange,
   onCreateSubjects,
   createSubjectsDisabled,
+  onDownloadSubjects,
+  canDownloadSubjects,
 }: GelSidebarProps) {
   return (
     <div className="w-full md:w-2/5 p-6 border-r border-gray-300 bg-white">
@@ -71,6 +75,19 @@ export function GelSidebar({
           }`}
         >
           Create Subjects Table
+        </button>
+
+        <button
+          type="button"
+          onClick={onDownloadSubjects}
+          disabled={!canDownloadSubjects}
+          className={`px-3 py-2 border rounded text-white ${
+            canDownloadSubjects
+              ? "bg-green-600 hover:bg-green-700"
+              : "bg-green-300 cursor-not-allowed"
+          }`}
+        >
+          Download Subjects CSV
         </button>
 
         <button
