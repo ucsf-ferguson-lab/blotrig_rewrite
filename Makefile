@@ -1,6 +1,12 @@
-.PHONY: fmt clean
+.PHONY: run fmt clean
+
+run: fmt
+	cd blotrig && \
+	npm run dev
 
 fmt:
+	cd blotrig && \
+	npm run lint && \
 	npx prettier . --write
 
 clean:
