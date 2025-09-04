@@ -1,27 +1,28 @@
 import React, { useState } from "react";
 import Papa, { type ParseResult } from "papaparse";
 
-// subcomponents
 import { GelSidebar } from "../components/GelSidebar";
 import { CsvViewer } from "../components/CsvViewer";
-import { ConfigsView } from "../components/ConfigsView";
 import { type Tab, TabNav } from "../components/TabNav";
 import { ErrorPopup } from "../components/ErrorPopup";
+
+import type { SubjectsTable } from "../logic/models";
+import { createSubjectsTable } from "../logic/gel_logic";
+import { ConvertJsonToTable } from "../components/ViewTable";
 
 export function GelMain() {
   //csv hooks
   const [csvData, setCsvData] = useState<string[][]>([]);
   const [csvColNames, setCsvColNames] = useState<string[]>([]);
-
-  //config hooks
   const [groupsCol, setGroupsCol] = useState<string>("None");
   const [subjectsCol, setSubjectsCol] = useState<string>("None");
-  const [lanes, setLanes] = useState<number | "">("");
-  const [replications, setReplications] = useState<number | "">("");
 
-  //app hooks
+  // app hooks
   const [activeTab, setActiveTab] = useState<Tab>("csv");
   const [error, setError] = useState<string | null>(null);
+
+  // subjects table
+  const [subjectsTable, setSubjectsTable] = useState<SubjectsTable>({});
 
   // csv handler
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,25 +44,35 @@ export function GelMain() {
     }
   };
 
-  // number input validation
-  const handleNumberChange =
-    (
-      setter: React.Dispatch<React.SetStateAction<number | "">>,
-      label: string,
-    ) =>
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const value = event.target.value;
-      const numValue = value === "" ? "" : Number(value);
+  // subjects table creation handler
+  const handleCreateSubjects = () => {
+    if (!csvData.length || groupsCol === "None" || subjectsCol === "None") {
+      setError("Please select valid group and subject columns.");
+      return;
+    }
 
-      if (numValue === "" || (Number.isInteger(numValue) && numValue >= 0)) {
-        if (numValue !== "" && numValue > 50) {
-          setter("");
-          setError(`Invalid input: ${label} must be ≤ 50`);
-          return;
-        }
-        setter(numValue);
-      }
-    };
+    const headers = csvData[0];
+    const rows = csvData
+      .slice(1)
+      .map((r) => Object.fromEntries(headers.map((h, i) => [h, r[i] ?? ""])));
+
+    try {
+      const table: SubjectsTable = createSubjectsTable(
+        rows,
+        groupsCol,
+        subjectsCol,
+      );
+      setSubjectsTable(table);
+      setActiveTab("subjects");
+    } catch (e) {
+      setError("Failed to create subjects table.");
+      console.error(e);
+    }
+  };
+
+  // disable create subjects table button if values not entered
+  const isCreateSubjectsDisabled =
+    csvData.length === 0 || groupsCol === "None" || subjectsCol === "None";
 
   return (
     <div className="relative min-h-screen flex bg-gray-50">
@@ -71,30 +82,26 @@ export function GelMain() {
         setGroupsCol={setGroupsCol}
         subjectsCol={subjectsCol}
         setSubjectsCol={setSubjectsCol}
-        lanes={lanes}
-        setLanes={setLanes}
-        replications={replications}
-        setReplications={setReplications}
         onFileChange={handleFileChange}
-        onNumberChange={handleNumberChange}
+        onCreateSubjects={handleCreateSubjects}
+        createSubjectsDisabled={isCreateSubjectsDisabled}
       />
 
       {/* content area */}
       <div className="w-full md:w-3/5 bg-white border-l border-gray-300 p-6 flex flex-col">
-        <TabNav
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          lanes={lanes}
-        />
+        <TabNav activeTab={activeTab} setActiveTab={setActiveTab} />
 
-        {activeTab === "csv" && <CsvViewer csvData={csvData} />}
-        {activeTab === "configs" && (
-          <ConfigsView
-            lanes={lanes}
-            replications={replications}
-            groupsCol={groupsCol}
-            subjectsCol={subjectsCol}
-          />
+        {activeTab === "csv" && (
+          <div>
+            <CsvViewer csvData={csvData} />
+          </div>
+        )}
+
+        {activeTab === "subjects" && (
+          <div>
+            <h2 className="text-lg font-bold mb-2">Subjects Table</h2>
+            <ConvertJsonToTable data={subjectsTable} />
+          </div>
         )}
       </div>
 
