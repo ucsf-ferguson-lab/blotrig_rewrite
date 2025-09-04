@@ -1,6 +1,6 @@
 import { Routes, Route, BrowserRouter } from "react-router-dom";
 
-import { GelCreatorPage } from "./routes/GelEntry";
+import { GelCreatorPage } from "../../Dev/GelEntry";
 import { ErrorPage } from "./routes/ErrorPage";
 
 export function App() {
