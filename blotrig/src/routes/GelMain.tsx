@@ -1,109 +1,73 @@
-import React, { useState } from "react";
-import Papa, { type ParseResult } from "papaparse";
+import React, { useState, useCallback } from "react";
 
 import { GelSidebar } from "../components/GelSidebar";
 import { CsvViewer } from "../components/CsvViewer";
 import { type Tab, TabNav } from "../components/TabNav";
 import { ErrorPopup } from "../components/ErrorPopup";
-
-import type { SubjectsTable } from "../logic/models";
-import { createSubjectsTable } from "../logic/gel_logic";
 import { ConvertJsonToTable } from "../components/ViewTable";
 
+import type { SubjectsTable } from "../logic/models";
+import { parseCsvFile, downloadCsv } from "../logic/gel_main/csv_utils";
+import {
+  buildSubjectsTable,
+  subjectsTableToCsv,
+} from "../logic/gel_main/subjects_utils";
+
 export function GelMain() {
-  //csv hooks
+  //csv state
   const [csvData, setCsvData] = useState<string[][]>([]);
   const [csvColNames, setCsvColNames] = useState<string[]>([]);
   const [groupsCol, setGroupsCol] = useState<string>("None");
   const [subjectsCol, setSubjectsCol] = useState<string>("None");
 
-  // app hooks
+  //app state
   const [activeTab, setActiveTab] = useState<Tab>("csv");
   const [error, setError] = useState<string | null>(null);
 
-  // subjects table
+  //subjects table
   const [subjectsTable, setSubjectsTable] = useState<SubjectsTable>({});
   const canDownloadSubjects = Object.keys(subjectsTable).length > 0;
 
-  // csv handler
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      Papa.parse<string[]>(file, {
-        complete: (results: ParseResult<string[]>) => {
-          setCsvData(results.data);
-          if (results.data.length > 0) {
-            setCsvColNames(results.data[0]);
-          } else {
-            setCsvColNames([]);
-            setGroupsCol("None");
-            setSubjectsCol("None");
-          }
-        },
-        skipEmptyLines: true,
+  const handleFileChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      parseCsvFile(file, (data, headers) => {
+        setCsvData(data);
+        setCsvColNames(headers);
+        if (!headers.length) {
+          setGroupsCol("None");
+          setSubjectsCol("None");
+        }
       });
-    }
-  };
+    },
+    [],
+  );
 
-  // subjects table creation handler
-  const handleCreateSubjects = () => {
+  const handleCreateSubjects = useCallback(() => {
     if (!csvData.length || groupsCol === "None" || subjectsCol === "None") {
       setError("Please select valid group and subject columns.");
       return;
     }
-
-    const headers = csvData[0];
-    const rows = csvData
-      .slice(1)
-      .map((r) => Object.fromEntries(headers.map((h, i) => [h, r[i] ?? ""])));
-
     try {
-      const table: SubjectsTable = createSubjectsTable(
-        rows,
-        groupsCol,
-        subjectsCol,
-      );
+      const table = buildSubjectsTable(csvData, groupsCol, subjectsCol);
       setSubjectsTable(table);
       setActiveTab("subjects");
     } catch (e) {
-      setError("Failed to create subjects table.");
       console.error(e);
+      setError("Failed to create subjects table.");
     }
-  };
+  }, [csvData, groupsCol, subjectsCol]);
 
-  // download subjects table as csv handler
-  const handleDownloadSubjects = () => {
-    if (!subjectsTable || Object.keys(subjectsTable).length === 0) {
+  const handleDownloadSubjects = useCallback(() => {
+    if (!canDownloadSubjects) {
       setError("No subjects table to download.");
       return;
     }
+    const csvString = subjectsTableToCsv(subjectsTable);
+    downloadCsv(csvString, "subjects_table.csv");
+  }, [subjectsTable, canDownloadSubjects]);
 
-    const columns = Object.keys(subjectsTable);
-    const colArrays = Object.values(subjectsTable);
-    const maxLen = Math.max(...colArrays.map((arr) => arr.length));
-
-    const rows = [];
-    for (let i = 0; i < maxLen; i++) {
-      const row: Record<string, string> = {};
-      columns.forEach((col) => {
-        row[col] = subjectsTable[col][i] ?? "";
-      });
-      rows.push(row);
-    }
-
-    const csvString = Papa.unparse(rows);
-    const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "subjects_table.csv";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  // disable create subjects button if values missing
   const isCreateSubjectsDisabled =
     csvData.length === 0 || groupsCol === "None" || subjectsCol === "None";
 
@@ -126,11 +90,7 @@ export function GelMain() {
       <div className="w-full md:w-3/5 bg-white border-l border-gray-300 p-6 flex flex-col">
         <TabNav activeTab={activeTab} setActiveTab={setActiveTab} />
 
-        {activeTab === "csv" && (
-          <div>
-            <CsvViewer csvData={csvData} />
-          </div>
-        )}
+        {activeTab === "csv" && <CsvViewer csvData={csvData} />}
 
         {activeTab === "subjects" && (
           <div>
