@@ -1,14 +1,13 @@
 import React from "react";
 
-export type Tab = "csv" | "configs";
+export type Tab = "csv" | "subjects";
 
 interface TabNavProps {
   activeTab: Tab;
   setActiveTab: React.Dispatch<React.SetStateAction<Tab>>;
-  lanes: number | "";
 }
 
-export function TabNav({ activeTab, setActiveTab, lanes }: TabNavProps) {
+export function TabNav({ activeTab, setActiveTab }: TabNavProps) {
   return (
     <div className="mb-4 flex space-x-4 border-b border-gray-200">
       <button
@@ -20,22 +19,19 @@ export function TabNav({ activeTab, setActiveTab, lanes }: TabNavProps) {
         onClick={() => setActiveTab("csv")}
         type="button"
       >
-        CSV Viewer
+        CSV viewer
       </button>
+
       <button
         className={`pb-2 font-semibold ${
-          activeTab === "configs"
+          activeTab === "subjects"
             ? "border-b-2 border-blue-500 text-blue-600"
             : "text-gray-500"
         }`}
-        onClick={() => setActiveTab("configs")}
+        onClick={() => setActiveTab("subjects")}
         type="button"
-        disabled={lanes === "" || lanes <= 0}
-        title={
-          lanes === "" || lanes <= 0 ? "Enter lanes first" : "View Configs"
-        }
       >
-        Configs
+        Subjects table
       </button>
     </div>
   );
