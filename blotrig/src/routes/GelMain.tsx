@@ -28,6 +28,7 @@ export function GelMain() {
   const [subjectsTable, setSubjectsTable] = useState<SubjectsTable>({});
   const canDownloadSubjects = Object.keys(subjectsTable).length > 0;
 
+  //file upload handler
   const handleFileChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
@@ -44,6 +45,7 @@ export function GelMain() {
     [],
   );
 
+  //create subjects table handler
   const handleCreateSubjects = useCallback(() => {
     if (!csvData.length || groupsCol === "None" || subjectsCol === "None") {
       setError("Please select valid group and subject columns.");
@@ -59,6 +61,7 @@ export function GelMain() {
     }
   }, [csvData, groupsCol, subjectsCol]);
 
+  //download subjects table handler
   const handleDownloadSubjects = useCallback(() => {
     if (!canDownloadSubjects) {
       setError("No subjects table to download.");
@@ -66,6 +69,33 @@ export function GelMain() {
     }
     const csvString = subjectsTableToCsv(subjectsTable);
     downloadCsv(csvString, "subjects_table.csv");
+  }, [subjectsTable, canDownloadSubjects]);
+
+  //check dupe id
+  const handleCheckDuplicates = useCallback(() => {
+    if (!canDownloadSubjects) {
+      setError("No subjects table available.");
+      return;
+    }
+
+    const allIds: string[] = [];
+    const duplicates: string[] = [];
+    for (const group in subjectsTable) {
+      for (const id of subjectsTable[group]) {
+        if (allIds.includes(id)) {
+          duplicates.push(id);
+        } else {
+          allIds.push(id);
+        }
+      }
+    }
+    if (duplicates.length > 0) {
+      setError(
+        `Duplicate subject IDs found: ${[...new Set(duplicates)].join(", ")}`,
+      );
+    } else {
+      setError("No duplicate subject IDs found.");
+    }
   }, [subjectsTable, canDownloadSubjects]);
 
   const isCreateSubjectsDisabled =
@@ -84,6 +114,8 @@ export function GelMain() {
         createSubjectsDisabled={isCreateSubjectsDisabled}
         onDownloadSubjects={handleDownloadSubjects}
         canDownloadSubjects={canDownloadSubjects}
+        onCheckDuplicates={handleCheckDuplicates}
+        subjectsTable={subjectsTable}
       />
 
       {/* content area */}
