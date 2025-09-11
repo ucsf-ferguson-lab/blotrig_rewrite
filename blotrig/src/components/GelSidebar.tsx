@@ -17,6 +17,7 @@ interface GelSidebarProps {
   canDownloadSubjects: boolean;
   onCheckDuplicates: () => void;
   subjectsTable: SubjectsTable;
+  hasDuplicates: boolean;
 }
 
 export function GelSidebar({
@@ -32,6 +33,7 @@ export function GelSidebar({
   canDownloadSubjects,
   onCheckDuplicates,
   subjectsTable,
+  hasDuplicates,
 }: GelSidebarProps) {
   const navigate = useNavigate();
 
@@ -136,7 +138,7 @@ export function GelSidebar({
         <button
           type="button"
           onClick={() => navigate("/create", { state: { subjectsTable } })}
-          disabled={!canDownloadSubjects}
+          disabled={!canDownloadSubjects || hasDuplicates}
           className={`px-3 py-2 border rounded text-white ${
             canDownloadSubjects
               ? "bg-purple-600 hover:bg-purple-700"

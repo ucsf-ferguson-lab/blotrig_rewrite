@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 
 import type { SubjectsTable } from "../logic/models";
-import { idSingleList } from "../logic/gel_create/prepare";
+import { createGelWrapper } from "../logic/gel_create/split";
 
 export function GelCreate() {
   const location = useLocation();
@@ -28,26 +28,69 @@ export function GelCreate() {
     );
   }
 
-  const lists: string[][] = Object.values(subjectsTable);
-  const mergedList: string[] = idSingleList(...lists);
+  const allSubjects: string[][] = Object.values(subjectsTable);
 
-  // show subjects table
+  //todo: get numLanes from number input
+  const gels: (string | number)[][] = createGelWrapper(allSubjects, 10 - 1);
+
+  //download as csv
+  function handleDownloadCSV() {
+    const csvContent: string = gels
+      .map((gel) => gel.map((lane) => `"${lane}"`).join(","))
+      .join("\n");
+
+    const blob: Blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const downloadUrl: string = URL.createObjectURL(blob);
+
+    const link: HTMLAnchorElement = document.createElement("a");
+    link.href = downloadUrl;
+    link.setAttribute("download", "gel_data.csv");
+
+    document.body.appendChild(link);
+    link.click();
+
+    document.body.removeChild(link);
+    URL.revokeObjectURL(downloadUrl);
+  }
+
+  //show rendered gels
   return (
     <div className="p-6">
-      <h2 className="text-lg font-bold mb-4">Create from Subjects Table</h2>
+      <h2 className="text-lg font-bold mb-4">
+        Generated gels
+      </h2>
 
-      <h3 className="mb-2 font-semibold">Merged ID List:</h3>
-      <ul className="mb-4 list-disc list-inside">{mergedList.join(", ")}</ul>
+      <button
+        type="button"
+        onClick={handleDownloadCSV}
+        className="mb-6 px-4 py-2 border rounded bg-green-600 text-white hover:bg-green-700"
+      >
+        Download gels as CSV
+      </button>
 
-      <div>
-        <p>Stats</p>
-        <p>Length: {mergedList.length}</p>
+      <div className="space-y-6">
+        {gels.map((gel, gelIndex) => (
+          <div key={gelIndex} className="border p-4 rounded-md shadow">
+            <h3 className="font-semibold mb-2">Gel {gelIndex + 1}</h3>
+
+            <div className="grid grid-cols-10 gap-2">
+              {gel.map((lane, laneIndex) => (
+                <div
+                  key={laneIndex}
+                  className="border px-2 py-1 text-center bg-gray-50"
+                >
+                  {lane}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
 
       <button
         type="button"
         onClick={() => navigate(-1)}
-        className="px-4 py-2 border rounded bg-gray-200 hover:bg-gray-300"
+        className="mt-6 px-4 py-2 border rounded bg-gray-200 hover:bg-gray-300"
       >
         Back
       </button>

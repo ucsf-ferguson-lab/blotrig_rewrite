@@ -19,6 +19,7 @@ export function GelMain() {
   const [csvColNames, setCsvColNames] = useState<string[]>([]);
   const [groupsCol, setGroupsCol] = useState<string>("None");
   const [subjectsCol, setSubjectsCol] = useState<string>("None");
+  const [hasDuplicates, setHasDuplicates] = useState(false);
 
   //app state
   const [activeTab, setActiveTab] = useState<Tab>("csv");
@@ -39,6 +40,7 @@ export function GelMain() {
         if (!headers.length) {
           setGroupsCol("None");
           setSubjectsCol("None");
+          setHasDuplicates(false);
         }
       });
     },
@@ -75,11 +77,14 @@ export function GelMain() {
   const handleCheckDuplicates = useCallback(() => {
     if (!canDownloadSubjects) {
       setError("No subjects table available.");
+      setHasDuplicates(false);
       return;
     }
 
     const allIds: string[] = [];
     const duplicates: string[] = [];
+
+    //todo: fix nested loop
     for (const group in subjectsTable) {
       for (const id of subjectsTable[group]) {
         if (allIds.includes(id)) {
@@ -89,12 +94,15 @@ export function GelMain() {
         }
       }
     }
+
     if (duplicates.length > 0) {
       setError(
         `Duplicate subject IDs found: ${[...new Set(duplicates)].join(", ")}`,
       );
+      setHasDuplicates(true);
     } else {
       setError("No duplicate subject IDs found.");
+      setHasDuplicates(false);
     }
   }, [subjectsTable, canDownloadSubjects]);
 
@@ -116,6 +124,7 @@ export function GelMain() {
         canDownloadSubjects={canDownloadSubjects}
         onCheckDuplicates={handleCheckDuplicates}
         subjectsTable={subjectsTable}
+        hasDuplicates={hasDuplicates}
       />
 
       {/* content area */}

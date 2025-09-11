@@ -1,0 +1,90 @@
+type ResultArray = (string | number)[];
+
+//create gel with round-robin approach, each gel must have 1 representative from each group
+//not optimized to use least gels
+export function createGelUnoptimized(
+  groups: string[][],
+  numLanes: number,
+): ResultArray[] {
+  //track current index per group for next ID to use
+  const indices = new Array(groups.length).fill(0);
+  const result: ResultArray[] = [];
+
+  //continue until all ID from all groups used
+  let done: boolean = false;
+
+  while (!done) {
+    const currentArray: ResultArray = [];
+    let lanesUsed: number = 0;
+
+    for (let g = 0; g < groups.length; g++) {
+      if (lanesUsed >= numLanes) {
+        break; //next gel
+      }
+
+      if (indices[g] < groups[g].length) {
+        currentArray.push(groups[g][indices[g]]);
+        indices[g]++;
+      } else {
+        currentArray.push("NA");
+      }
+
+      lanesUsed++;
+    }
+
+    //break conditional, push remaining to another gel
+    if (currentArray.length === 0) {
+      done = true;
+    } else {
+      result.push(currentArray);
+      done = indices.every((idx, g) => idx >= groups[g].length);
+    }
+  }
+
+  return result;
+}
+
+//optimize use least number gels, include empty spaces
+export function optimizeGel(
+  arrays: Array<Array<string | number>>,
+  numLanes: number,
+): Array<Array<string | number>> {
+  const result: Array<Array<string | number>> = [];
+  let current: Array<string | number> = [];
+
+  for (const arr of arrays) {
+    if (current.length + arr.length > numLanes) {
+      while (current.length < numLanes) {
+        current.push("NA");
+      }
+      result.push(current);
+      current = [];
+    }
+    current = current.concat(arr);
+  }
+
+  if (current.length > 0) {
+    while (current.length < numLanes) {
+      current.push("NA");
+    }
+    result.push(current);
+  }
+
+  return result;
+}
+
+export function addLadder(
+  arrays: Array<Array<string | number>>,
+): Array<Array<string | number>> {
+  return arrays.map((innerArray) => ["Ladder", ...innerArray]);
+}
+
+export function createGelWrapper(
+  groups: string[][],
+  numLanes: number,
+): Array<Array<string | number>> {
+  const unoptimized = createGelUnoptimized(groups, numLanes);
+  const optimized = optimizeGel(unoptimized, numLanes);
+
+  return addLadder(optimized);
+}
