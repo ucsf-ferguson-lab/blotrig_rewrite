@@ -5,7 +5,7 @@ export function ConvertJsonToTable({ data }: JsonTableProps) {
     return <p>No data available</p>;
   }
 
-  // if data is object of arrays (columns), convert to row-based array of objects
+  //if data is object of arrays (columns), convert to row-based array of objects
   let rows: Record<string, string>[] = [];
   if (!Array.isArray(data)) {
     const columns = Object.keys(data);

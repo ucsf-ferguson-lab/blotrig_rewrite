@@ -83,6 +83,18 @@ export function createGelWrapper(
   groups: string[][],
   numLanes: number,
 ): Array<Array<string | number>> {
+  const numGroups: number = groups.length; //validate numLanes
+
+  if (numLanes < 2) {
+    throw new Error("Number of lanes must be at least 2.");
+  }
+
+  if (numLanes < numGroups + 1) {
+    throw new Error(
+      `Number of lanes (${numLanes}) cannot be less than number of groups (${numGroups}).`,
+    );
+  }
+
   const unoptimized = createGelUnoptimized(groups, numLanes);
   const optimized = optimizeGel(unoptimized, numLanes);
 

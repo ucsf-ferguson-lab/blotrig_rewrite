@@ -12,6 +12,7 @@ import {
   buildSubjectsTable,
   subjectsTableToCsv,
 } from "../logic/gel_main/subjects_utils";
+import { createGelWrapper } from "../logic/gel_create/split";
 
 export function GelMain() {
   //csv state
@@ -25,9 +26,13 @@ export function GelMain() {
   const [activeTab, setActiveTab] = useState<Tab>("csv");
   const [error, setError] = useState<string | null>(null);
 
-  //subjects table
+  //subjects table + gels
   const [subjectsTable, setSubjectsTable] = useState<SubjectsTable>({});
+  const [gels, setGels] = useState<(string | number)[][]>([]);
   const canDownloadSubjects = Object.keys(subjectsTable).length > 0;
+
+  //user input for lane count
+  const [numLanes, setNumLanes] = useState<number>(10);
 
   //file upload handler
   const handleFileChange = useCallback(
@@ -56,7 +61,8 @@ export function GelMain() {
     try {
       const table = buildSubjectsTable(csvData, groupsCol, subjectsCol);
       setSubjectsTable(table);
-      setActiveTab("subjects");
+      setGels([]); // reset gels when subjects change
+      setActiveTab("subjects"); //auto-switch
     } catch (e) {
       console.error(e);
       setError("Failed to create subjects table.");
@@ -73,7 +79,7 @@ export function GelMain() {
     downloadCsv(csvString, "subjects_table.csv");
   }, [subjectsTable, canDownloadSubjects]);
 
-  //check dupe id
+  //check duplicates
   const handleCheckDuplicates = useCallback(() => {
     if (!canDownloadSubjects) {
       setError("No subjects table available.");
@@ -84,7 +90,6 @@ export function GelMain() {
     const allIds: string[] = [];
     const duplicates: string[] = [];
 
-    //todo: fix nested loop
     for (const group in subjectsTable) {
       for (const id of subjectsTable[group]) {
         if (allIds.includes(id)) {
@@ -106,8 +111,71 @@ export function GelMain() {
     }
   }, [subjectsTable, canDownloadSubjects]);
 
+  //create gels handler
+  const handleCreateGel = useCallback(() => {
+    if (!canDownloadSubjects || hasDuplicates) {
+      setError(
+        "Cannot create gels. Ensure subjects table is valid and has no duplicates.",
+      );
+      return;
+    }
+
+    const numGroups = Object.keys(subjectsTable).length;
+    if (numLanes < numGroups) {
+      setError(
+        `Number of lanes (${numLanes}) cannot be less than number of groups (${numGroups}).`,
+      );
+      return;
+    }
+
+    if (numLanes < 2) {
+      setError("Number of lanes must be at least 2.");
+      return;
+    }
+
+    try {
+      const allSubjects: string[][] = Object.values(subjectsTable);
+      const newGels = createGelWrapper(allSubjects, numLanes - 1);
+      setGels(newGels);
+      setActiveTab("gels");
+    } catch (e) {
+      console.error(e);
+      setError("Failed to create gels.");
+    }
+  }, [subjectsTable, canDownloadSubjects, hasDuplicates, numLanes]);
+
+  //download gels CSV
+  function handleDownloadGelsCSV() {
+    if (!gels.length) {
+      setError("No gels generated.");
+      return;
+    }
+    const csvContent: string = gels
+      .map((gel) => gel.map((lane) => `"${lane}"`).join(","))
+      .join("\n");
+
+    const blob: Blob = new Blob([csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const downloadUrl: string = URL.createObjectURL(blob);
+
+    const link: HTMLAnchorElement = document.createElement("a");
+    link.href = downloadUrl;
+    link.setAttribute("download", "gel_data.csv");
+
+    document.body.appendChild(link);
+    link.click();
+
+    document.body.removeChild(link);
+    URL.revokeObjectURL(downloadUrl);
+  }
+
   const isCreateSubjectsDisabled =
     csvData.length === 0 || groupsCol === "None" || subjectsCol === "None";
+
+  const numGroups = Object.keys(subjectsTable).length;
+  const isCreateGelDisabled =
+    !canDownloadSubjects || hasDuplicates || numLanes < numGroups;
 
   return (
     <div className="relative min-h-screen flex bg-gray-50">
@@ -125,23 +193,75 @@ export function GelMain() {
         onCheckDuplicates={handleCheckDuplicates}
         subjectsTable={subjectsTable}
         hasDuplicates={hasDuplicates}
+        onCreateGel={handleCreateGel}
+        numLanes={numLanes}
+        setNumLanes={setNumLanes}
+        isCreateGelDisabled={isCreateGelDisabled}
       />
 
       {/* content area */}
       <div className="w-full md:w-3/5 bg-white border-l border-gray-300 p-6 flex flex-col">
-        <TabNav activeTab={activeTab} setActiveTab={setActiveTab} />
+        <TabNav
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          canShowGels={canDownloadSubjects && !hasDuplicates}
+        />
 
         {activeTab === "csv" && <CsvViewer csvData={csvData} />}
 
         {activeTab === "subjects" && (
           <div>
             <h2 className="text-lg font-bold mb-2">Subjects Table</h2>
+
+            <button
+              type="button"
+              onClick={handleDownloadSubjects}
+              disabled={!canDownloadSubjects}
+              className={`mt-4 mb-6 px-3 py-2 border rounded text-white ${
+                canDownloadSubjects
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-green-300 cursor-not-allowed"
+              }`}
+            >
+              Download Subjects Table
+            </button>
+
             <ConvertJsonToTable data={subjectsTable} />
+          </div>
+        )}
+
+        {activeTab === "gels" && (
+          <div>
+            <h2 className="text-lg font-bold mb-4">Generated Gels</h2>
+            <button
+              type="button"
+              onClick={handleDownloadGelsCSV}
+              className="mb-6 px-4 py-2 border rounded bg-green-600 text-white hover:bg-green-700"
+            >
+              Download gels as CSV
+            </button>
+
+            <div className="space-y-6">
+              {gels.map((gel, gelIndex) => (
+                <div key={gelIndex} className="border p-4 rounded-md shadow">
+                  <h3 className="font-semibold mb-2">Gel {gelIndex + 1}</h3>
+                  <div className="grid grid-cols-10 gap-2">
+                    {gel.map((lane, laneIndex) => (
+                      <div
+                        key={laneIndex}
+                        className="border px-2 py-1 text-center bg-gray-50"
+                      >
+                        {lane}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
 
-      {/* error popup */}
       {error && <ErrorPopup error={error} onClose={() => setError(null)} />}
     </div>
   );

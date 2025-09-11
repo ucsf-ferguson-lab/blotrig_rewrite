@@ -1,6 +1,4 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
-
+import React, { useEffect } from "react";
 import { ColSelector } from "./ColSelector";
 import type { SubjectsTable } from "../logic/models";
 
@@ -18,6 +16,10 @@ interface GelSidebarProps {
   onCheckDuplicates: () => void;
   subjectsTable: SubjectsTable;
   hasDuplicates: boolean;
+  onCreateGel: () => void;
+  numLanes: number;
+  setNumLanes: React.Dispatch<React.SetStateAction<number>>;
+  isCreateGelDisabled: boolean;
 }
 
 export function GelSidebar({
@@ -29,17 +31,29 @@ export function GelSidebar({
   onFileChange,
   onCreateSubjects,
   createSubjectsDisabled,
-  onDownloadSubjects,
   canDownloadSubjects,
   onCheckDuplicates,
+  onCreateGel,
+  numLanes,
+  setNumLanes,
+  isCreateGelDisabled,
   subjectsTable,
-  hasDuplicates,
 }: GelSidebarProps) {
-  const navigate = useNavigate();
+  //calculate num groups (for minLanes & gel generate)
+  const numGroups = Object.keys(subjectsTable).length;
+  const minLanes = numGroups > 0 ? numGroups + 1 : 2;
+
+  //reset default when subjects change
+  useEffect(() => {
+    if (numGroups > 0 && numLanes < minLanes) {
+      setNumLanes(minLanes);
+    }
+  }, [numGroups, minLanes, numLanes, setNumLanes]);
 
   return (
     <div className="w-full md:w-2/5 p-6 border-r border-gray-300 bg-white">
       <h2 className="text-lg font-semibold mb-5">Setup:</h2>
+
       <ol className="list-decimal list-inside space-y-6 text-sm">
         {/* upload CSV */}
         <li>
@@ -106,22 +120,48 @@ export function GelSidebar({
             Check for duplicate IDs
           </button>
         </li>
+
+        {/* create gels with adjustable lanes */}
+        <li>
+          <label htmlFor="numLanes">Enter number of lanes:</label>
+
+          <div className="flex items-center space-x-2 mb-2 mt-3 mx-3">
+            <input
+              id="numLanes"
+              type="number"
+              min={minLanes}
+              value={numLanes}
+              onChange={(e) =>
+                setNumLanes(
+                  Math.max(parseInt(e.target.value, 10) || minLanes, minLanes),
+                )
+              }
+              className="w-20 border px-2 py-1 rounded"
+            />
+
+            <span className="text-xs text-gray-500">
+              (Min = Groups + 1, includes ladder)
+            </span>
+          </div>
+        </li>
+
+        <li>
+          <button
+            type="button"
+            onClick={onCreateGel}
+            disabled={isCreateGelDisabled}
+            className={`px-3 py-2 border rounded text-white ${
+              isCreateGelDisabled
+                ? "bg-purple-300 cursor-not-allowed"
+                : "bg-purple-600 hover:bg-purple-700"
+            }`}
+          >
+            Create Gel
+          </button>
+        </li>
       </ol>
 
       <div className="mt-6 flex space-x-2">
-        <button
-          type="button"
-          onClick={onDownloadSubjects}
-          disabled={!canDownloadSubjects}
-          className={`px-3 py-2 border rounded text-white ${
-            canDownloadSubjects
-              ? "bg-green-600 hover:bg-green-700"
-              : "bg-green-300 cursor-not-allowed"
-          }`}
-        >
-          Download Subjects Table
-        </button>
-
         <button
           type="button"
           onClick={() => {
@@ -131,21 +171,6 @@ export function GelSidebar({
           className="px-3 py-2 border rounded bg-gray-100 hover:bg-gray-200"
         >
           Clear All
-        </button>
-      </div>
-
-      <div>
-        <button
-          type="button"
-          onClick={() => navigate("/create", { state: { subjectsTable } })}
-          disabled={!canDownloadSubjects || hasDuplicates}
-          className={`px-3 py-2 border rounded text-white ${
-            canDownloadSubjects
-              ? "bg-purple-600 hover:bg-purple-700"
-              : "bg-purple-300 cursor-not-allowed"
-          }`}
-        >
-          Next →
         </button>
       </div>
     </div>
