@@ -33,8 +33,9 @@ export function GelMain() {
   const [gels, setGels] = useState<(string | number)[][]>([]);
   const canDownloadSubjects = Object.keys(subjectsTable).length > 0;
 
-  //user input for lane count (2=min allowed)
+  //user input for lane count (min=2), technical replications (min=1)
   const [numLanes, setNumLanes] = useState<number>(2);
+  const [numReplications, setNumReplications] = useState<number>(1);
 
   useEffect(() => {
     const groupsCount = Object.keys(subjectsTable).length;
@@ -193,7 +194,7 @@ export function GelMain() {
 
   const canShowSamples = gels.length > 0;
   const gelTableRows: GelTableRow[] = canShowSamples
-    ? buildGelTableRows(subjectsTable, gels)
+    ? buildGelTableRows(subjectsTable, gels, numReplications)
     : [];
 
   return (
@@ -216,6 +217,8 @@ export function GelMain() {
         numLanes={numLanes}
         setNumLanes={setNumLanes}
         isCreateGelDisabled={isCreateGelDisabled}
+        numReplications={numReplications}
+        setNumReplications={setNumReplications}
       />
 
       <div className="w-full md:w-3/5 bg-white border-l border-gray-300 p-6 flex flex-col">

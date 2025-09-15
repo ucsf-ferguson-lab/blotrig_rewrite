@@ -20,6 +20,8 @@ interface GelSidebarProps {
   numLanes: number;
   setNumLanes: React.Dispatch<React.SetStateAction<number>>;
   isCreateGelDisabled: boolean;
+  numReplications: number;
+  setNumReplications: React.Dispatch<React.SetStateAction<number>>;
 }
 
 export function GelSidebar({
@@ -38,6 +40,8 @@ export function GelSidebar({
   setNumLanes,
   isCreateGelDisabled,
   subjectsTable,
+  numReplications,
+  setNumReplications,
 }: GelSidebarProps) {
   //calculate num groups (for minLanes & gel generate)
   const numGroups = Object.keys(subjectsTable).length;
@@ -159,6 +163,30 @@ export function GelSidebar({
             Create Gel
           </button>
         </li>
+
+        {/* technical replications */}
+        <li>
+          <label htmlFor="numReplications">
+            Enter number of technical replications:
+          </label>
+
+          <div className="flex items-center space-x-2 mb-2 mt-3 mx-3">
+            <input
+              id="numReplications"
+              type="number"
+              min={1}
+              value={numReplications}
+              onChange={(e) =>
+                setNumReplications(
+                  Math.max(parseInt(e.target.value, 10) || 1, 1),
+                )
+              }
+              className="w-20 border px-2 py-1 rounded"
+            />
+
+            <span className="text-xs text-gray-500">(Min = 1)</span>
+          </div>
+        </li>
       </ol>
 
       <div className="mt-6 flex space-x-2">
@@ -167,10 +195,12 @@ export function GelSidebar({
           onClick={() => {
             setGroupsCol("None");
             setSubjectsCol("None");
+            setNumLanes(minLanes);
+            setNumReplications(1);
           }}
           className="px-3 py-2 border rounded bg-gray-100 hover:bg-gray-200"
         >
-          Clear All
+          Clear all options
         </button>
       </div>
     </div>
