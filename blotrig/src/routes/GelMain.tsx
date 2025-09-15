@@ -15,6 +15,8 @@ import {
 import { createGelWrapper } from "../logic/gel_create/split";
 import { GelTable } from "../components/GelTable";
 import { buildGelTableRows } from "../logic/export";
+import { downloadGelTableCSV } from "../logic/downloads/gel_table";
+import { Pagination } from "../components/Pagination";
 
 export function GelMain() {
   //csv state
@@ -36,6 +38,38 @@ export function GelMain() {
   //user input for lane count (min=2), technical replications (min=1)
   const [numLanes, setNumLanes] = useState<number>(2);
   const [numReplications, setNumReplications] = useState<number>(1);
+
+  //pagination (csv page)
+  const [csvPage, setCsvPage] = useState(1);
+  const csvRowsPerPage = 17;
+  const csvTotalPages = Math.ceil(csvData.length / csvRowsPerPage);
+  const csvPaginatedData = csvData.slice(
+    (csvPage - 1) * csvRowsPerPage,
+    csvPage * csvRowsPerPage,
+  );
+
+  //pagination (subjects table)
+  const [subjectsPage, setSubjectsPage] = useState(1);
+  const subjectsEntries = Object.entries(subjectsTable);
+  const subjectsRowsPerPage = 17;
+  const subjectsTotalPages = Math.ceil(
+    subjectsEntries.length / subjectsRowsPerPage,
+  );
+  const subjectsPaginated = Object.fromEntries(
+    subjectsEntries.slice(
+      (subjectsPage - 1) * subjectsRowsPerPage,
+      subjectsPage * subjectsRowsPerPage,
+    ),
+  );
+
+  //pagination (show gels)
+  const [gelsPage, setGelsPage] = useState(1);
+  const gelsPerPage = 5;
+  const gelsTotalPages = Math.ceil(gels.length / gelsPerPage);
+  const paginatedGels = gels.slice(
+    (gelsPage - 1) * gelsPerPage,
+    gelsPage * gelsPerPage,
+  );
 
   useEffect(() => {
     const groupsCount = Object.keys(subjectsTable).length;
@@ -185,6 +219,10 @@ export function GelMain() {
     URL.revokeObjectURL(downloadUrl);
   }
 
+  function handleDownloadGelTableCSV() {
+    downloadGelTableCSV(gelTableRows, setError);
+  }
+
   const isCreateSubjectsDisabled =
     csvData.length === 0 || groupsCol === "None" || subjectsCol === "None";
 
@@ -196,6 +234,15 @@ export function GelMain() {
   const gelTableRows: GelTableRow[] = canShowSamples
     ? buildGelTableRows(subjectsTable, gels, numReplications)
     : [];
+
+  //pagination (export table)
+  const [samplesPage, setSamplesPage] = useState(1);
+  const samplesRowsPerPage = 15;
+  const samplesTotalPages = Math.ceil(gelTableRows.length / samplesRowsPerPage);
+  const paginatedRows = gelTableRows.slice(
+    (samplesPage - 1) * samplesRowsPerPage,
+    samplesPage * samplesRowsPerPage,
+  );
 
   return (
     <div className="relative min-h-screen flex bg-gray-50">
@@ -229,7 +276,17 @@ export function GelMain() {
           canShowSamples={canShowSamples}
         />
 
-        {activeTab === "csv" && <CsvViewer csvData={csvData} />}
+        {activeTab === "csv" && (
+          <div>
+            <CsvViewer csvData={csvPaginatedData} />
+            <Pagination
+              currentPage={csvPage}
+              totalPages={csvTotalPages}
+              onPageChange={setCsvPage}
+            />
+          </div>
+        )}
+
         {activeTab === "subjects" && (
           <div>
             <h2 className="text-lg font-bold mb-2">Subjects Table</h2>
@@ -237,31 +294,39 @@ export function GelMain() {
               type="button"
               onClick={handleDownloadSubjects}
               disabled={!canDownloadSubjects}
-              className={`mt-4 mb-6 px-3 py-2 border rounded text-white ${
+              className={`mb-6 px-3 py-2 border rounded text-white ${
                 canDownloadSubjects
                   ? "bg-green-600 hover:bg-green-700"
                   : "bg-green-300 cursor-not-allowed"
               }`}
             >
-              Download Subjects Table
+              Download Subjects Table as csv
             </button>
-            <ConvertJsonToTable data={subjectsTable} />
+            <ConvertJsonToTable data={subjectsPaginated} />
+            <Pagination
+              currentPage={subjectsPage}
+              totalPages={subjectsTotalPages}
+              onPageChange={setSubjectsPage}
+            />
           </div>
         )}
+
         {activeTab === "gels" && (
           <div>
-            <h2 className="text-lg font-bold mb-4">Generated Gels</h2>
+            <h2 className="text-lg font-bold mb-2">Generated Gels</h2>
             <button
               type="button"
               onClick={handleDownloadGelsCSV}
               className="mb-6 px-4 py-2 border rounded bg-green-600 text-white hover:bg-green-700"
             >
-              Download gels as CSV
+              Download Generated Gels as csv
             </button>
             <div className="space-y-6">
-              {gels.map((gel, gelIndex) => (
+              {paginatedGels.map((gel, gelIndex) => (
                 <div key={gelIndex} className="border p-4 rounded-md shadow">
-                  <h3 className="font-semibold mb-2">Gel {gelIndex + 1}</h3>
+                  <h3 className="font-semibold mb-2">
+                    Gel {(gelsPage - 1) * gelsPerPage + gelIndex + 1}
+                  </h3>
                   <div className="grid grid-cols-10 gap-2">
                     {gel.map((lane, laneIndex) => (
                       <div
@@ -275,9 +340,28 @@ export function GelMain() {
                 </div>
               ))}
             </div>
+            <Pagination
+              currentPage={gelsPage}
+              totalPages={gelsTotalPages}
+              onPageChange={setGelsPage}
+            />
           </div>
         )}
-        {activeTab === "samples" && <GelTable rows={gelTableRows} />}
+
+        {activeTab === "samples" && (
+          <div>
+            <h2 className="text-lg font-bold mb-2">Generated Export Table</h2>
+            <GelTable
+              rows={paginatedRows}
+              onDownloadCSV={handleDownloadGelTableCSV}
+            />
+            <Pagination
+              currentPage={samplesPage}
+              totalPages={samplesTotalPages}
+              onPageChange={setSamplesPage}
+            />
+          </div>
+        )}
       </div>
       {error && <ErrorPopup error={error} onClose={() => setError(null)} />}
     </div>

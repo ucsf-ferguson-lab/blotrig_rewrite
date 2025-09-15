@@ -73,10 +73,11 @@ export function optimizeGel(
   return result;
 }
 
+//add ladder to index 0, shifts everything R by 1, drop last index (should be NA)
 export function addLadder(
   arrays: Array<Array<string | number>>,
 ): Array<Array<string | number>> {
-  return arrays.map((innerArray) => ["Ladder", ...innerArray]);
+  return arrays.map((innerArray) => ["Ladder", ...innerArray.slice(0, -1)]);
 }
 
 export function createGelWrapper(
@@ -89,7 +90,7 @@ export function createGelWrapper(
     throw new Error("Number of lanes must be at least 2.");
   }
 
-  if (numLanes < numGroups + 1) {
+  if (numLanes < numGroups) {
     throw new Error(
       `Number of lanes (${numLanes}) cannot be less than number of groups (${numGroups}).`,
     );
