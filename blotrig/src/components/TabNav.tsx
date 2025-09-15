@@ -1,14 +1,20 @@
 import React from "react";
 
-export type Tab = "csv" | "subjects" | "gels";
+export type Tab = "csv" | "subjects" | "gels" | "samples";
 
 interface TabNavProps {
   activeTab: Tab;
   setActiveTab: React.Dispatch<React.SetStateAction<Tab>>;
   canShowGels: boolean;
+  canShowSamples: boolean;
 }
 
-export function TabNav({ activeTab, setActiveTab, canShowGels }: TabNavProps) {
+export function TabNav({
+  activeTab,
+  setActiveTab,
+  canShowGels,
+  canShowSamples,
+}: TabNavProps) {
   return (
     <div className="mb-4 flex space-x-4 border-b border-gray-200">
       <button
@@ -48,6 +54,21 @@ export function TabNav({ activeTab, setActiveTab, canShowGels }: TabNavProps) {
         type="button"
       >
         Gels
+      </button>
+
+      <button
+        disabled={!canShowSamples}
+        className={`pb-2 font-semibold ${
+          activeTab === "samples"
+            ? "border-b-2 border-blue-500 text-blue-600"
+            : !canShowSamples
+              ? "text-gray-300 cursor-not-allowed"
+              : "text-gray-500"
+        }`}
+        onClick={() => canShowSamples && setActiveTab("samples")}
+        type="button"
+      >
+        Gel Table
       </button>
     </div>
   );

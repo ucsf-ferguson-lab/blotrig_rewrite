@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 
 import { GelSidebar } from "../components/GelSidebar";
 import { CsvViewer } from "../components/CsvViewer";
@@ -6,13 +6,15 @@ import { type Tab, TabNav } from "../components/TabNav";
 import { ErrorPopup } from "../components/ErrorPopup";
 import { ConvertJsonToTable } from "../components/ViewTable";
 
-import type { SubjectsTable } from "../logic/models";
+import type { GelTableRow, SubjectsTable } from "../logic/models";
 import { parseCsvFile, downloadCsv } from "../logic/gel_main/csv_utils";
 import {
   buildSubjectsTable,
   subjectsTableToCsv,
 } from "../logic/gel_main/subjects_utils";
 import { createGelWrapper } from "../logic/gel_create/split";
+import { GelTable } from "../components/GelTable";
+import { buildGelTableRows } from "../logic/export";
 
 export function GelMain() {
   //csv state
@@ -31,8 +33,20 @@ export function GelMain() {
   const [gels, setGels] = useState<(string | number)[][]>([]);
   const canDownloadSubjects = Object.keys(subjectsTable).length > 0;
 
-  //user input for lane count
-  const [numLanes, setNumLanes] = useState<number>(10);
+  //user input for lane count (2=min allowed)
+  const [numLanes, setNumLanes] = useState<number>(2);
+
+  useEffect(() => {
+    const groupsCount = Object.keys(subjectsTable).length;
+    if (groupsCount > 0) {
+      setNumLanes((prev) => {
+        if (prev <= groupsCount) {
+          return groupsCount + 1;
+        }
+        return prev;
+      });
+    }
+  }, [subjectsTable]);
 
   //file upload handler
   const handleFileChange = useCallback(
@@ -135,7 +149,7 @@ export function GelMain() {
 
     try {
       const allSubjects: string[][] = Object.values(subjectsTable);
-      const newGels = createGelWrapper(allSubjects, numLanes - 1);
+      const newGels = createGelWrapper(allSubjects, numLanes);
       setGels(newGels);
       setActiveTab("gels");
     } catch (e) {
@@ -177,6 +191,11 @@ export function GelMain() {
   const isCreateGelDisabled =
     !canDownloadSubjects || hasDuplicates || numLanes < numGroups;
 
+  const canShowSamples = gels.length > 0;
+  const gelTableRows: GelTableRow[] = canShowSamples
+    ? buildGelTableRows(subjectsTable, gels)
+    : [];
+
   return (
     <div className="relative min-h-screen flex bg-gray-50">
       <GelSidebar
@@ -199,20 +218,18 @@ export function GelMain() {
         isCreateGelDisabled={isCreateGelDisabled}
       />
 
-      {/* content area */}
       <div className="w-full md:w-3/5 bg-white border-l border-gray-300 p-6 flex flex-col">
         <TabNav
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           canShowGels={canDownloadSubjects && !hasDuplicates}
+          canShowSamples={canShowSamples}
         />
 
         {activeTab === "csv" && <CsvViewer csvData={csvData} />}
-
         {activeTab === "subjects" && (
           <div>
             <h2 className="text-lg font-bold mb-2">Subjects Table</h2>
-
             <button
               type="button"
               onClick={handleDownloadSubjects}
@@ -225,11 +242,9 @@ export function GelMain() {
             >
               Download Subjects Table
             </button>
-
             <ConvertJsonToTable data={subjectsTable} />
           </div>
         )}
-
         {activeTab === "gels" && (
           <div>
             <h2 className="text-lg font-bold mb-4">Generated Gels</h2>
@@ -240,7 +255,6 @@ export function GelMain() {
             >
               Download gels as CSV
             </button>
-
             <div className="space-y-6">
               {gels.map((gel, gelIndex) => (
                 <div key={gelIndex} className="border p-4 rounded-md shadow">
@@ -260,8 +274,8 @@ export function GelMain() {
             </div>
           </div>
         )}
+        {activeTab === "samples" && <GelTable rows={gelTableRows} />}
       </div>
-
       {error && <ErrorPopup error={error} onClose={() => setError(null)} />}
     </div>
   );
