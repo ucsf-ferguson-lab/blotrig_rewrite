@@ -47,3 +47,4 @@ EOL
 #Misc
 Dev/
 .devcontainer
+src/test.ts
