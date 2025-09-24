@@ -1,13 +1,12 @@
 .PHONY: run test fmt clean
 
 run: fmt
-	cd blotrig && npm run dev
+	npm run dev
 
 test:
-	cd blotrig/src && npx ts-node test.ts
+	cd src && npx ts-node test.ts
 
 fmt:
-	cd blotrig && \
 	npm run lint && \
 	npx prettier . --write
 
