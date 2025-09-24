@@ -1,4 +1,6 @@
 import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
 import { ColSelector } from "./ColSelector";
 import type { SubjectsTable } from "../logic/models";
 
@@ -53,6 +55,8 @@ export function GelSidebar({
       setNumLanes(minLanes);
     }
   }, [numGroups, minLanes, numLanes, setNumLanes]);
+
+  const navigate = useNavigate();
 
   return (
     <div className="w-full md:w-2/5 p-6 border-r border-gray-300 bg-white">
@@ -201,6 +205,14 @@ export function GelSidebar({
           className="px-3 py-2 border rounded bg-gray-100 hover:bg-gray-200"
         >
           Clear all options
+        </button>
+
+        <button
+          type="button"
+          onClick={() => navigate("/")}
+          className="px-3 py-2 border rounded bg-gray-100 hover:bg-gray-200"
+        >
+          Back to Main Page
         </button>
       </div>
     </div>

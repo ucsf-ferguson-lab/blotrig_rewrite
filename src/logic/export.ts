@@ -6,20 +6,26 @@ export function buildGelTableRows(
   numReplicates: number,
 ): GelTableRow[] {
   const groupNames = Object.keys(subjectsTable);
-  const baseRows: Omit<GelTableRow, "technical_replicate">[] = []; //added in addTechnicalReplicates
+  const baseRows: Omit<GelTableRow, "technical_replicate">[] = [];
 
   gels.forEach((gel, gelIdx) => {
     gel.forEach((subjectId, laneIdx) => {
       const subjectIdStr = String(subjectId);
 
-      // find group, may be undefined if ladder
-      const group = groupNames.find((grp) =>
-        subjectsTable[grp].includes(subjectIdStr),
-      );
+      let group: string;
+      if (subjectIdStr === "NA") {
+        group = "Padding"; //explicitly identify padding
+      } else if (subjectIdStr === "Ladder") {
+        group = "Ladder";
+      } else {
+        group =
+          groupNames.find((grp) => subjectsTable[grp].includes(subjectIdStr)) ??
+          "Unknown";
+      }
 
       baseRows.push({
         sample_id: subjectIdStr,
-        group: group ?? "Ladder",
+        group,
         gel: gelIdx + 1,
         lane: laneIdx + 1,
         protein_quant: "",

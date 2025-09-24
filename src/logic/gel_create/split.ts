@@ -73,11 +73,33 @@ export function optimizeGel(
   return result;
 }
 
-//add ladder to index 0, shifts everything R by 1, drop last index (should be NA)
-export function addLadder(
+//add ladder to index 0, add equal padding after ladder
+export function addLadderCentered(
   arrays: Array<Array<string | number>>,
 ): Array<Array<string | number>> {
-  return arrays.map((innerArray) => ["Ladder", ...innerArray.slice(0, -1)]);
+  return arrays.map((innerArray) => {
+    //rm trailing NA (will add back later)
+    const trimmed: (string | number)[] = innerArray.filter(
+      (item) => item !== "NA",
+    );
+
+    //ladder always index[0]
+    const content: (string | number)[] = trimmed.slice(1); // without "Ladder" (not present yet)
+    const totalLanes: number = innerArray.length; //total lanes (original length)
+    const available: number = totalLanes - 1; //num available slots (exclude Ladder at index 0)
+    const naCount: number = available - content.length; //num NA reach lane count
+
+    //split NA evenly before & after content
+    const leftPad: number = Math.floor(naCount / 2);
+    const rightPad: number = naCount - leftPad;
+
+    return [
+      "Ladder",
+      ...Array(leftPad).fill("NA"),
+      ...content,
+      ...Array(rightPad).fill("NA"),
+    ];
+  });
 }
 
 export function createGelWrapper(
@@ -99,5 +121,5 @@ export function createGelWrapper(
   const unoptimized = createGelUnoptimized(groups, numLanes);
   const optimized = optimizeGel(unoptimized, numLanes);
 
-  return addLadder(optimized);
+  return addLadderCentered(optimized);
 }
