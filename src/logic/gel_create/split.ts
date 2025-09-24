@@ -79,11 +79,13 @@ export function addLadderCentered(
 ): Array<Array<string | number>> {
   return arrays.map((innerArray) => {
     //rm trailing NA (will add back later)
-    const trimmed: (string | number)[] = innerArray.filter((item) => item !== "NA");
+    const trimmed: (string | number)[] = innerArray.filter(
+      (item) => item !== "NA",
+    );
 
     //ladder always index[0]
     const content: (string | number)[] = trimmed.slice(1); // without "Ladder" (not present yet)
-    const totalLanes: number = innerArray.length;  //total lanes (original length)
+    const totalLanes: number = innerArray.length; //total lanes (original length)
     const available: number = totalLanes - 1; //num available slots (exclude Ladder at index 0)
     const naCount: number = available - content.length; //num NA reach lane count
 
