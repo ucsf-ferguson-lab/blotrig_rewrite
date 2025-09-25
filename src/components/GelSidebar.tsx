@@ -148,7 +148,7 @@ export function GelSidebar({
             />
 
             <span className="text-xs text-gray-500">
-              (Min = Groups + 1, includes ladder)
+              (Min = Groups + at least 1 ladder)
             </span>
           </div>
         </li>

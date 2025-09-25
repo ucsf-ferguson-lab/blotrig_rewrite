@@ -78,25 +78,27 @@ export function addLadderCentered(
   arrays: Array<Array<string | number>>,
 ): Array<Array<string | number>> {
   return arrays.map((innerArray) => {
-    //rm trailing NA (will add back later)
-    const trimmed: (string | number)[] = innerArray.filter(
-      (item) => item !== "NA",
+    //rm trailing NA, keep index[0]
+    const content: (string | number)[] = innerArray.filter(
+      (item, i) => item !== "NA" || i === 0,
     );
 
-    //ladder always index[0]
-    const content: (string | number)[] = trimmed.slice(1); // without "Ladder" (not present yet)
-    const totalLanes: number = innerArray.length; //total lanes (original length)
-    const available: number = totalLanes - 1; //num available slots (exclude Ladder at index 0)
-    const naCount: number = available - content.length; //num NA reach lane count
+    const totalLanes: number = innerArray.length; //orig lane count
 
-    //split NA evenly before & after content
+    //content after Ladder will be everything except NA (preserve order)
+    const actualContent: (string | number)[] = content.filter(
+      (item) => item !== "NA" && item !== "Ladder",
+    );
+    const naCount: number = totalLanes - 1 - actualContent.length;
+
+    //add padding
     const leftPad: number = Math.floor(naCount / 2);
     const rightPad: number = naCount - leftPad;
 
     return [
       "Ladder",
       ...Array(leftPad).fill("NA"),
-      ...content,
+      ...actualContent,
       ...Array(rightPad).fill("NA"),
     ];
   });

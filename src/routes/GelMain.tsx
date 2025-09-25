@@ -29,6 +29,7 @@ export function GelMain() {
   //app state
   const [activeTab, setActiveTab] = useState<Tab>("csv");
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   //subjects table + gels
   const [subjectsTable, setSubjectsTable] = useState<SubjectsTable>({});
@@ -154,9 +155,11 @@ export function GelMain() {
         `Duplicate subject IDs found: ${[...new Set(duplicates)].join(", ")}`,
       );
       setHasDuplicates(true);
+      setSuccess(null); // clear success
     } else {
-      setError("No duplicate subject IDs found.");
+      setSuccess("No duplicate subject IDs found.");
       setHasDuplicates(false);
+      setError(null); // clear error
     }
   }, [subjectsTable, canDownloadSubjects]);
 
@@ -294,11 +297,10 @@ export function GelMain() {
               type="button"
               onClick={handleDownloadSubjects}
               disabled={!canDownloadSubjects}
-              className={`mb-6 px-3 py-2 border rounded text-white ${
-                canDownloadSubjects
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-green-300 cursor-not-allowed"
-              }`}
+              className={`mb-6 px-3 py-2 border rounded text-white ${canDownloadSubjects
+                ? "bg-green-600 hover:bg-green-700"
+                : "bg-green-300 cursor-not-allowed"
+                }`}
             >
               Download Subjects Table as csv
             </button>
@@ -363,7 +365,27 @@ export function GelMain() {
           </div>
         )}
       </div>
+
+      {/* no duplicates found, lower R corner */}
       {error && <ErrorPopup error={error} onClose={() => setError(null)} />}
+      {success && !error && (
+        <div
+          className="fixed bottom-4 right-4 z-50 max-w-xs bg-green-100 border border-green-400 text-green-700 
+               px-4 py-3 rounded shadow"
+          role="alert"
+        >
+          <div className="flex justify-between items-center">
+            <span>{success}</span>
+            <button
+              className="ml-2 font-bold text-green-700 focus:outline-none"
+              onClick={() => setSuccess(null)}
+              aria-label="Close success message"
+            >
+              x
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
