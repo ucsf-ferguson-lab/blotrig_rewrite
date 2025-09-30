@@ -10,6 +10,7 @@ import type { GelTableRow, SubjectsTable } from "../logic/models";
 import { parseCsvFile, downloadCsv } from "../logic/gel_main/csv_utils";
 import {
   buildSubjectsTable,
+  shuffleWithConstraints,
   subjectsTableToCsv,
 } from "../logic/gel_main/subjects_utils";
 import { createGelWrapper } from "../logic/gel_create/split";
@@ -110,8 +111,16 @@ export function GelMain() {
     }
     try {
       const table = buildSubjectsTable(csvData, groupsCol, subjectsCol);
-      setSubjectsTable(table);
-      setGels([]); // reset gels when subjects change
+
+      //reorder headers with constraints
+      const shuffledKeys = shuffleWithConstraints(Object.keys(table));
+      const reordered: SubjectsTable = {};
+      for (const key of shuffledKeys) {
+        reordered[key] = table[key];
+      }
+
+      setSubjectsTable(reordered);
+      setGels([]); //reset gels when subjects change
       setActiveTab("subjects"); //auto-switch
     } catch (e) {
       console.error(e);
@@ -297,10 +306,11 @@ export function GelMain() {
               type="button"
               onClick={handleDownloadSubjects}
               disabled={!canDownloadSubjects}
-              className={`mb-6 px-3 py-2 border rounded text-white ${canDownloadSubjects
-                ? "bg-green-600 hover:bg-green-700"
-                : "bg-green-300 cursor-not-allowed"
-                }`}
+              className={`mb-6 px-3 py-2 border rounded text-white ${
+                canDownloadSubjects
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-green-300 cursor-not-allowed"
+              }`}
             >
               Download Subjects Table as csv
             </button>
