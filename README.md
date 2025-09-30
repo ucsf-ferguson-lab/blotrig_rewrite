@@ -1,5 +1,7 @@
 # Welcome to blotRig!
 
+![GitHub Tag](https://img.shields.io/github/v/tag/ucsf-ferguson-lab/blotrig_rewrite) ![License](https://img.shields.io/badge/license-MIT-blue)
+
 ## What is blotRig?
 
 blotRig is a user-friendly interface designed to facilitate appropriate counterbalancing, technical replication, and analysis of western blot experiments.
@@ -12,10 +14,10 @@ Now you're ready to go! You can use blotRig to design western blot experiments, 
 
 ### Run blotRig locally
 
-Requires nodejs, typescript, make. Start app using
+Requires NodeJS. Start app using
 
 ```shell
-npm install && make run
+npm install && npm run dev
 ```
 
 Access app at [webpage](http://localhost:5173).
@@ -27,4 +29,5 @@ For more information and/or view source code, visit: [blotRig repo](https://gith
 | Description | Link                                                 |
 | ----------- | ---------------------------------------------------- |
 | Repo        | https://github.com/ucsf-ferguson-lab/blotrig_rewrite |
+| Original    | https://github.com/ucsf-ferguson-lab/blotRig         |
 | Publication | https://doi.org/10.1038/s41598-024-70096-0           |

@@ -5,5 +5,9 @@ import tailwindcss from "@tailwindcss/vite";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  // base: "/blotrig_rewrite",
+  //for manual deploy
+  // build:{
+  //   outDir: "docs"
+  // }
+  base: "/blotrig_rewrite/",
 });

@@ -1,4 +1,5 @@
-import { Routes, Route, BrowserRouter } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
+import { HashRouter } from "react-router-dom";
 
 import { GelMain } from "./routes/GelMain";
 import { ErrorPage } from "./routes/ErrorPage";
@@ -6,7 +7,7 @@ import { AboutPage } from "./routes/AboutPage";
 
 export function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route path="/">
           <Route index element={<AboutPage />} />
@@ -14,6 +15,6 @@ export function App() {
           <Route path="*" element={<ErrorPage />} />
         </Route>
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
