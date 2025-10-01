@@ -45,11 +45,9 @@ export function GelSidebar({
   numReplications,
   setNumReplications,
 }: GelSidebarProps) {
-  //calculate num groups (for minLanes & gel generate)
   const numGroups = Object.keys(subjectsTable).length;
   const minLanes = numGroups > 0 ? numGroups + 1 : 2;
 
-  //reset default when subjects change
   useEffect(() => {
     if (numGroups > 0 && numLanes < minLanes) {
       setNumLanes(minLanes);
@@ -131,11 +129,30 @@ export function GelSidebar({
 
         {/* create gels with adjustable lanes */}
         <li>
-          <label htmlFor="numLanes">Enter number of lanes:</label>
+          <label htmlFor="numLanes">Select number of lanes:</label>
 
           <div className="flex items-center space-x-2 mb-2 mt-3 mx-3">
-            <input
+            <select
               id="numLanes"
+              value={
+                ["15", "26"].includes(String(numLanes)) ? numLanes : "Custom"
+              }
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === "15" || value === "26") {
+                  setNumLanes(parseInt(value, 10));
+                } else {
+                  setNumLanes(minLanes);
+                }
+              }}
+              className="border px-2 py-1 rounded"
+            >
+              <option value="15">Mini gel (15 lanes)</option>
+              <option value="26">Midi gel (26 lanes)</option>
+              <option value="Custom">Custom gel</option>
+            </select>
+
+            <input
               type="number"
               min={minLanes}
               value={numLanes}
@@ -144,7 +161,12 @@ export function GelSidebar({
                   Math.max(parseInt(e.target.value, 10) || minLanes, minLanes),
                 )
               }
-              className="w-20 border px-2 py-1 rounded"
+              disabled={["15", "26"].includes(String(numLanes))}
+              className={`w-20 border px-2 py-1 rounded ${
+                ["15", "26"].includes(String(numLanes))
+                  ? "bg-gray-200 cursor-not-allowed"
+                  : ""
+              }`}
             />
 
             <span className="text-xs text-gray-500">

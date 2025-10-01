@@ -4,7 +4,7 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
-//cutoff of 15
+//user specified cutoffs, different for each tab panel
 export function Pagination({
   currentPage,
   totalPages,

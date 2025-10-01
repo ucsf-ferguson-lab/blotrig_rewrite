@@ -9,9 +9,9 @@ export function AboutPage() {
 
       <div className="max-w-2xl mx-auto space-y-4">
         <p>
-          Designed and built by _:{" "}
+          Designed and built by me:{" "}
           <a
-            href="https://www.f.edu"
+            href="https://www.github.com/ucsf-ferguson-lab"
             target="_blank"
             rel="noopener noreferrer"
             className="underline text-blue-600 hover:text-blue-800"

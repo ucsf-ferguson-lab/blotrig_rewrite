@@ -43,7 +43,7 @@ export function GelMain() {
 
   //pagination (csv page)
   const [csvPage, setCsvPage] = useState(1);
-  const csvRowsPerPage = 17;
+  const csvRowsPerPage = 15;
   const csvTotalPages = Math.ceil(csvData.length / csvRowsPerPage);
   const csvPaginatedData = csvData.slice(
     (csvPage - 1) * csvRowsPerPage,
@@ -53,7 +53,7 @@ export function GelMain() {
   //pagination (subjects table)
   const [subjectsPage, setSubjectsPage] = useState(1);
   const subjectsEntries = Object.entries(subjectsTable);
-  const subjectsRowsPerPage = 17;
+  const subjectsRowsPerPage = 15;
   const subjectsTotalPages = Math.ceil(
     subjectsEntries.length / subjectsRowsPerPage,
   );
