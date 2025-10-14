@@ -24,7 +24,7 @@ Access app at [webpage](http://localhost:5173).
 
 ## Links
 
-For more information and/or view source code, visit: [blotRig repo](https://github.com/ucsf-ferguson-lab/blotRig)
+For more information and/or view source code, visit: [blotRig repo](https://github.com/ucsf-ferguson-lab/blotRig) or read [Codebase.md](./docs/Codebase.md)
 
 | Description | Link                                                 |
 | ----------- | ---------------------------------------------------- |
