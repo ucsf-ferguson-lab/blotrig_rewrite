@@ -6,6 +6,8 @@
 
 blotRig is a user-friendly interface designed to facilitate appropriate counterbalancing, technical replication, and analysis of western blot experiments.
 
+![](./docs/main_logic.png)
+
 ## Run blotRig
 
 Visit website. Follow steps on left sidebar.
