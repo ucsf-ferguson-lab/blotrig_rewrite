@@ -16,7 +16,7 @@ Now you're ready to go! You can use blotRig to design western blot experiments, 
 
 ### Run blotRig locally
 
-Requires NodeJS. Start app using
+Requires [NodeJS](https://nodejs.org/en/download). Start app using
 
 ```shell
 npm install && npm run dev

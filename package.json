@@ -1,13 +1,16 @@
 {
   "name": "blotrig",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.3.0",
   "type": "module",
   "scripts": {
     "dev": "vite -- --host",
-    "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "fmt": "npx prettier --write .",
+    "test": "cd src && npx ts-node test.ts",
+    "preview": "vite preview",
+    "build": "tsc -b && vite build",
+    "clean": "find . -type d -name 'node_modules' | xargs rm -rf"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.13",
